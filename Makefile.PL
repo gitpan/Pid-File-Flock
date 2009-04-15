@@ -12,6 +12,11 @@ WriteMakefile(
       : ()),
     PL_FILES            => {},
     PREREQ_PM => {
+		'Carp'       => 0,
+		'Cwd'        => 0,
+		'Fcntl'      => 0,
+		'File::Basename' => 0,
+		'File::Spec::Functions' => 0,
         'Test::More' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

@@ -9,11 +9,11 @@ Pid::File::Flock - PID file operations
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -140,7 +140,7 @@ Acquiring lock, called by C<new> constructor.
 sub acquire {
 	my $proto = shift;
 	my $path = shift if @_%2;
-	my %opts = ('wait'=>0,%iopts,@_);
+	my %opts = (wait=>0,%iopts,@_);
 
 	undef $opts{quiet} if $opts{debug};  # mutually exclusive
 
@@ -148,49 +148,85 @@ sub acquire {
 	$path = realpath $path || catfile $opts{dir}||tmpdir, $opts{name}||(basename($0).($opts{ext}||'.pid'));
 	carp "started, pid $$ ($path)" if $opts{debug};
 
-	# quick lock attempt
-	my $lock = sysopen FH, $path, O_CREAT|O_RDWR|O_EXLOCK|O_NONBLOCK or do {
-		croak "can't create pid file ($path): $!" unless $!{EAGAIN}
-	};
+	# try to get locked handle
+	my $fh = attempt($path,%opts);
 
-	# wait for lock
-	if (!$lock && $opts{wait}) {
-		local $SIG{ALRM} = sub { die "x\n" };
-		alarm $opts{wait};
-		eval {
-			do {
-				# only lock possibility checking
-				sysopen FH, $path, O_RDONLY|O_EXLOCK or do {
-					die "can't read pid file ($path): $!\n" unless $!{ENOENT}
-				};
-				# real lock acquiring
-				$lock = sysopen FH, $path, O_CREAT|O_RDWR|O_EXLOCK|O_NONBLOCK or do {
-					die "can't create pid file ($path): $!\n" unless $!{EAGAIN}
-				};
-			} until $lock;
-			alarm 0;
-		};
-		# catched die to croak
-		croak $1 if $@ && $@ ne "x\n" && $@ =~ /^(.+)\n?/;
+	# unsuccessfully locking
+	unless ($fh) {
+		# waiting for lock
+		if ($opts{wait}) {
+			local $SIG{ALRM} = sub { die "x\n" };
+			alarm $opts{wait};
+			eval {
+				do {
+					# try to get locked handle (blocking)
+					carp "found alive process, waiting $opts{wait}" if $opts{debug};
+					$fh = attempt($path,%opts,block=>1);
+				} until $fh;
+				alarm 0;
+			};
+			# catched die to croak
+			croak $1 if $@ && $@ ne "x\n" && $@ =~ /^(.+)\n?/;
+			goto LOCKED if $fh;
+		}
+		# warning about alive process
+		unless ($opts{quiet}) {
+			sysopen FH, $path, O_RDONLY or do {
+				croak "can't read pid file ($path): $!" unless $!{ENOENT};
+			};
+			carp "found alive process (".<FH>."), exit";
+		}
+		exit;
 	}
 
-	# warning about alive process
-	unless ($lock || $opts{quiet}) {
-		my $pid = <FH> if sysopen FH, $path, O_RDONLY;
-		carp "found alive process".($pid ? " (pid $pid)" : "").", exit";
-	}
-	exit unless $lock;
-
+LOCKED:
 	# warning about staled pid
-	if ($opts{debug} and $_=<FH>) {
-		carp "found staled pid file (pid $_)";
-		sysseek FH,0,SEEK_SET or croak "can't seek in pid file ($path): $!"
+	if ($opts{debug}) {
+		carp "found staled pid file (".<$fh>.")";
+		sysseek $fh,0,SEEK_SET or croak "can't seek in pid file ($path): $!"
 	}
-	truncate FH,0 and syswrite FH,$$ or croak "can't write pid file ($path): $!";
-
-	bless { path => $path, handle => *FH, debug => $opts{debug} }, $proto;
+	truncate $fh,0 and syswrite $fh,$$ or croak "can't write pid file ($path): $!";
+	bless { path => $path, handle => $fh, debug => $opts{debug} }, $proto;
 }
 
+=head2 attempt
+
+Attempting acquire lock with additional checks.
+
+=cut
+
+sub attempt {
+	my ($path,%opts) = @_;
+
+	# just an open
+	sysopen FH, $path, O_CREAT|O_RDWR or croak "can't open pid file ($path): $!";
+
+	# try to lock it
+	my $nb = $opts{block} ? 0 : LOCK_NB;
+	flock FH, LOCK_EX|$nb or do {
+		croak "can't lock pid file ($path): $!" unless $!{EAGAIN};
+		return;
+	};
+
+	# ok, now we have locked handle, but is original file name steel exists?
+	my @stath = stat FH or croak "can't get stat about locked handle: $!";
+	my @statf = stat $path or do {
+		croak "can't get stat about file ($path): $!" unless $!{ENOENT};
+		# recursive call, no more tries
+		return if $opts{recurs};
+		# try to recreate dir entry (non-blocking recursive call)
+		carp "dir entry for pid file was lost" if $opts{debug};
+		return attempt($path,%opts,block=>0,recurs=>1);
+	};
+
+	# there is new dir entry, our locked handle is invalid now
+	unless ($stath[1] == $statf[1]) {
+		carp "dir entry for pid file was recreated" if $opts{debug};
+		return;
+	}
+
+	return *FH;
+}
 
 =head2 release
 
