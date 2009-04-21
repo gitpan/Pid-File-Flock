@@ -2,6 +2,8 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 
+die "Unsupported operating system" if $^O =~ /^cygwin$/i;
+
 WriteMakefile(
     NAME                => 'Pid::File::Flock',
     AUTHOR              => 'Oleg A. Mamontov <oleg@mamontov.net>',

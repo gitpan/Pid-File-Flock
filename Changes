@@ -1,5 +1,8 @@
 Revision history for Pid-File-Flock
 
+0.03    2009-04-21
+        Explicitly die in Makefile.PL under cygwin.
+
 0.02    2009-04-15
         POSIX compliance file locking semantic
 

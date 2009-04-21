@@ -9,11 +9,11 @@ Pid::File::Flock - PID file operations
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -265,6 +265,10 @@ __END__
 =head1 AUTHOR
 
 Oleg A. Mamontov, C<< <oleg at mamontov.net> >>
+
+=head1 LIMITATIONS
+
+Module works with advisory files locking which is not implemented on win32 platform.
 
 =head1 BUGS
 
