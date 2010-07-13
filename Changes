@@ -1,5 +1,9 @@
 Revision history for Pid-File-Flock
 
+0.04    2010-07-13
+        Added 'abandon' method special for using
+        in forking applications.
+
 0.03    2009-04-21
         Explicitly die in Makefile.PL under cygwin.
 

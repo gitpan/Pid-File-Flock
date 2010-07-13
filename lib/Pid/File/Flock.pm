@@ -9,11 +9,11 @@ Pid::File::Flock - PID file operations
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -103,6 +103,16 @@ Switch quiet mode on (don't warn about staled pid files).
 =cut
 
 sub new { $inst ||= shift->acquire(@_) }
+
+
+=head2 abandon
+
+Don't try to remove pid file during destruction.
+Become for using in forking applications.
+
+=cut
+
+sub abandon { ( ref $_[0] ? $_[0] : $inst )->{abandoned}=1 }
 
 
 =head1 INTERNAL ROUTINES
@@ -247,7 +257,7 @@ Lock object destructor.
 
 =cut
 
-sub DESTROY { shift->release }
+sub DESTROY { $_[0]->{abandoned} or shift->release }
 
 
 =head2 END
