@@ -9,11 +9,11 @@ Pid::File::Flock - PID file operations
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -112,7 +112,7 @@ Become for using in forking applications.
 
 =cut
 
-sub abandon { ( ref $_[0] ? $_[0] : $inst )->{abandoned}=1 }
+sub abandon { $inst->{abandoned}=1 }
 
 
 =head1 INTERNAL ROUTINES
@@ -230,7 +230,7 @@ sub attempt {
 	};
 
 	# there is new dir entry, our locked handle is invalid now
-	unless ($stath[1] == $statf[1]) {
+	unless ($stath[0] == $statf[0] && $stath[1] == $statf[1]) {
 		carp "dir entry for pid file was recreated" if $opts{debug};
 		return;
 	}

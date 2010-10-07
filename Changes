@@ -1,5 +1,9 @@
 Revision history for Pid-File-Flock
 
+0.05    2010-10-07
+        Fixed potential race condition.
+        Thanks to Jozef Kutej.
+
 0.04    2010-07-13
         Added 'abandon' method special for using
         in forking applications.
