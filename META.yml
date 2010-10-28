@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Pid-File-Flock
-version:            0.05
+version:            0.06
 abstract:           PID file operations
 author:
     - Oleg A. Mamontov <oleg@mamontov.net>

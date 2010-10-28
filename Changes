@@ -1,5 +1,10 @@
 Revision history for Pid-File-Flock
 
+0.06    2010-10-28
+        New option ('raise') implemented.
+        Intended for usage from eval block.
+        Thanks to Jozef Kutej and Vladimir Timofeev.
+
 0.05    2010-10-07
         Fixed potential race condition.
         Thanks to Jozef Kutej.

@@ -1,6 +1,6 @@
 package Pid::File::Flock;
 
-use warnings;
+use warnings qw(all);
 use strict;
 
 =head1 NAME
@@ -9,11 +9,11 @@ Pid::File::Flock - PID file operations
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -28,6 +28,7 @@ You can use module generic way:
 or in simplified form:
 
   use Pid::File::Flock qw(:auto);
+  use Pid::File::Flock qw(:auto :raise);
   use Pid::File::Flock qw(:auto path=file);
   use Pid::File::Flock qw(:auto :debug dir=/tmp);
 
@@ -89,6 +90,11 @@ Name for pid file (by default like a script self).
 =item * ext => 'extension'
 
 Extension for pid file ('.pid' by default).
+
+=item * raise => 1
+
+Use C<croak> instead of simple C<exit>.
+Usable from caller eval block to handle unsuccessful locking attempts.
 
 =item * debug => 1
 
@@ -179,13 +185,15 @@ sub acquire {
 			croak $1 if $@ && $@ ne "x\n" && $@ =~ /^(.+)\n?/;
 			goto LOCKED if $fh;
 		}
-		# warning about alive process
-		unless ($opts{quiet}) {
+		# get pid of alive process
+		if ( $opts{raise} || !$opts{quiet}) {
 			sysopen FH, $path, O_RDONLY or do {
 				croak "can't read pid file ($path): $!" unless $!{ENOENT};
 			};
-			carp "found alive process (".<FH>."), exit";
+			my $ex = $opts{raise} ? \&croak : \&carp;
+			&$ex("found alive process (".<FH>."), exit");
 		}
+		# gently terminate main process
 		exit;
 	}
 
