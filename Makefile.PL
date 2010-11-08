@@ -15,7 +15,6 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
 		'Carp'       => 0,
-		'Cwd'        => 0,
 		'Fcntl'      => 0,
 		'File::Basename' => 0,
 		'File::Spec::Functions' => 0,

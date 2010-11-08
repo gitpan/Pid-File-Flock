@@ -1,5 +1,8 @@
 Revision history for Pid-File-Flock
 
+0.07    2010-11-08
+        Fixed bugs under MSWin32.
+
 0.06    2010-10-28
         New option ('raise') implemented.
         Intended for usage from eval block.

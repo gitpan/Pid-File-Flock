@@ -9,11 +9,11 @@ Pid::File::Flock - PID file operations
 
 =head1 VERSION
 
-Version 0.06
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -41,10 +41,9 @@ you can mix both too:
 =cut
 
 use Carp;
-use Cwd qw(realpath);
 use Fcntl qw(:DEFAULT :flock :seek);
 use File::Basename qw(basename);
-use File::Spec::Functions qw(catfile tmpdir);
+use File::Spec::Functions qw(catfile rel2abs tmpdir);
 
 my ($inst,%iopts);
 
@@ -161,7 +160,7 @@ sub acquire {
 	undef $opts{quiet} if $opts{debug};  # mutually exclusive
 
 	# construct and normalize path
-	$path = realpath $path || catfile $opts{dir}||tmpdir, $opts{name}||(basename($0).($opts{ext}||'.pid'));
+	$path = rel2abs $path || catfile $opts{dir}||tmpdir, $opts{name}||(basename($0).($opts{ext}||'.pid'));
 	carp "started, pid $$ ($path)" if $opts{debug};
 
 	# try to get locked handle
@@ -226,6 +225,9 @@ sub attempt {
 		return;
 	};
 
+	# exclusive locking on win32 is sufficient condition
+	return *FH if $^O eq 'MSWin32';
+
 	# ok, now we have locked handle, but is original file name steel exists?
 	my @stath = stat FH or croak "can't get stat about locked handle: $!";
 	my @statf = stat $path or do {
@@ -253,9 +255,10 @@ Unlink pid file, handle will be closed a bit later, during object destructing.
 =cut
 
 sub release {
-	return undef $inst unless ref $_[0];
-	my $path = shift->{path};
-	unlink $path or carp "can't remove pid file ($path): $!";
+	my $self = shift;
+	return undef $inst unless ref $self;
+	close $self->{handle};
+	unlink $self->{path} or carp "can't remove pid file ($self->{path}): $!";
 }
 
 

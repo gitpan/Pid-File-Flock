@@ -13,7 +13,11 @@ BEGIN {
 my $pf = basename($0).'.pid';
 
 ok( -f $pf, 'pid file creating' );
-ok( do { open FH,$pf and <FH> } eq $$, 'pid file content' );
+
+SKIP: {
+	skip "on $^O",1 if $^O eq 'MSWin32';
+	ok( do { open FH,$pf and <FH> } eq $$, 'pid file content' );
+}
 
 Pid::File::Flock::release;
 

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Pid-File-Flock
-version:            0.06
+version:            0.07
 abstract:           PID file operations
 author:
     - Oleg A. Mamontov <oleg@mamontov.net>
@@ -12,7 +12,6 @@ build_requires:
     ExtUtils::MakeMaker:  0
 requires:
     Carp:                 0
-    Cwd:                  0
     Fcntl:                0
     File::Basename:       0
     File::Spec::Functions:  0
