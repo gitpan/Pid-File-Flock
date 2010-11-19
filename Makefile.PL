@@ -1,25 +1,12 @@
-use strict;
-use warnings;
-use ExtUtils::MakeMaker;
+use inc::Module::Install;
 
-die "Unsupported operating system" if $^O =~ /^cygwin$/i;
+name      'Pid-File-Flock';
+license   'perl';
+all_from  'lib/Pid/File/Flock.pm';
 
-WriteMakefile(
-    NAME                => 'Pid::File::Flock',
-    AUTHOR              => 'Oleg A. Mamontov <oleg@mamontov.net>',
-    VERSION_FROM        => 'lib/Pid/File/Flock.pm',
-    ABSTRACT_FROM       => 'lib/Pid/File/Flock.pm',
-    ($ExtUtils::MakeMaker::VERSION >= 6.3002
-      ? ('LICENSE'=> 'perl')
-      : ()),
-    PL_FILES            => {},
-    PREREQ_PM => {
-		'Carp'       => 0,
-		'Fcntl'      => 0,
-		'File::Basename' => 0,
-		'File::Spec::Functions' => 0,
-        'Test::More' => 0,
-    },
-    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean               => { FILES => 'Pid-File-Flock-*' },
-);
+test_requires 'Test::More';
+
+auto_install;
+
+WriteAll;
+

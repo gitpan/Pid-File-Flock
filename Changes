@@ -1,5 +1,8 @@
 Revision history for Pid-File-Flock
 
+0.08    2010-11-19
+        Switched to Module::Install
+
 0.07    2010-11-08
         Fixed bugs under MSWin32.
 
